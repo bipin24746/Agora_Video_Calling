@@ -21,6 +21,7 @@ class _HomePageState extends State<HomePage> {
     _startVideoCalling();
   }
 
+  //main setup process for initiating the video call
   Future<void> _startVideoCalling() async {
     await _requestPermission();
     await _initializeAgoraVideoSDK();
@@ -31,7 +32,7 @@ class _HomePageState extends State<HomePage> {
 
   //initialize the engine for real time communication
   Future<void> _initializeAgoraVideoSDK() async {
-    _engine = createAgoraRtcEngine();
+    _engine = createAgoraRtcEngine(); //creates an instance of the rtc(real time communication) engine
     await _engine.initialize(const RtcEngineContext(
       appId: appId,
       channelProfile: ChannelProfileType.channelProfileCommunication,
@@ -42,6 +43,8 @@ class _HomePageState extends State<HomePage> {
     await _engine.joinChannel(
       token: token,
       channelId: channel,
+
+      //controls various media settings like auto subscribing to audio video etc
       options: const ChannelMediaOptions(
         autoSubscribeAudio: true,
         autoSubscribeVideo: true,
@@ -58,14 +61,19 @@ class _HomePageState extends State<HomePage> {
   void _setupEventHandlers() {
     _engine.registerEventHandler(
       RtcEngineEventHandler(
+        //This event is triggered when the local user successfully joins the channel
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
           debugPrint("Local user ${connection.localUid} joined");
           setState(() => _localUserJoined = true);
         },
+
+        //triggered when a remote user joins the channel
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
           debugPrint("Remote user $remoteUid joined");
           setState(() => _remoteUid = remoteUid);
         },
+
+          // triggered when a remote user leaves the channel
         onUserOffline: (RtcConnection connection, int remoteUid,
             UserOfflineReasonType reason) {
           debugPrint("Remote user $remoteUid left");
@@ -88,7 +96,7 @@ class _HomePageState extends State<HomePage> {
         canvas: const VideoCanvas(
           uid: 0, // Specifies the local user
           renderMode:
-              RenderModeType.renderModeHidden, // Sets the video rendering mode
+              RenderModeType.renderModeHidden, // Sets the video rendering mode, this isnot understands
         ),
       ),
     );
