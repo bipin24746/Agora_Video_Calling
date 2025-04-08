@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:video_calling_app/home_page.dart';
+import 'package:video_calling_app/di/injection.dart';
+import 'package:video_calling_app/router/app_router.dart';
 
 void main() {
-  runApp(const MyApp());
+  configureDependencies();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
 
-  // This widget is the root of your application.
+  final _appRouter = AppRouter();
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Agora',
-      theme: ThemeData(
-               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const HomePage(title:'Agora'),
+    return MaterialApp.router(
+      // routerDelegate: _appRouter.delegate(),
+      // routeInformationParser: _appRouter.defaultRouteParser(),
+      routerConfig: AppRouter().config(),
     );
   }
 }
