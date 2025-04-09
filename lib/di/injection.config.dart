@@ -15,18 +15,20 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:video_calling_app/di/injection.dart' as _i885;
 import 'package:video_calling_app/features/video_call_screen/data/data_source/video_call_remote_data_source.dart'
     as _i405;
-import 'package:video_calling_app/features/video_call_screen/domain/repository/video_call_repository.dart'
-    as _i6;
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/enable_video_use_case.dart'
-    as _i849;
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/join_channel_use_case.dart'
-    as _i482;
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/leave_channel_use_case.dart'
-    as _i688;
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/mute_mic_use_case.dart'
-    as _i602;
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/switch_camera_use_case.dart'
-    as _i692;
+import 'package:video_calling_app/features/video_call_screen/data/repositories_impl/video_call_repo_impl.dart'
+    as _i21;
+import 'package:video_calling_app/features/video_call_screen/domain/repositories/video_call_repository.dart'
+    as _i634;
+import 'package:video_calling_app/features/video_call_screen/domain/use_cases/end_call_usecase.dart'
+    as _i980;
+import 'package:video_calling_app/features/video_call_screen/domain/use_cases/start_video_call_usecase.dart'
+    as _i907;
+import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_camera_usecase.dart'
+    as _i644;
+import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_mic_usecase.dart'
+    as _i662;
+import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_video_usecase.dart'
+    as _i272;
 import 'package:video_calling_app/features/video_call_screen/presentation/bloc/video_call_bloc.dart'
     as _i309;
 
@@ -43,24 +45,26 @@ extension GetItInjectableX on _i174.GetIt {
     );
     final registerModule = _$RegisterModule();
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
-    gh.lazySingleton<_i405.VideoCallDataSource>(
+    gh.lazySingleton<_i405.VideoCallRemoteDataSource>(
         () => _i405.VideoCallRemoteDataSourceImpl());
-    gh.lazySingleton<_i849.EnableVideoUseCase>(
-        () => _i849.EnableVideoUseCase(gh<_i6.VideoCallRepository>()));
-    gh.lazySingleton<_i482.JoinVideoCallUseCase>(
-        () => _i482.JoinVideoCallUseCase(gh<_i6.VideoCallRepository>()));
-    gh.lazySingleton<_i688.LeaveVideoCallUseCase>(
-        () => _i688.LeaveVideoCallUseCase(gh<_i6.VideoCallRepository>()));
-    gh.lazySingleton<_i602.MuteMicUseCase>(
-        () => _i602.MuteMicUseCase(gh<_i6.VideoCallRepository>()));
-    gh.lazySingleton<_i692.SwitchCameraUseCase>(
-        () => _i692.SwitchCameraUseCase(gh<_i6.VideoCallRepository>()));
+    gh.lazySingleton<_i634.VideoCallRepository>(() =>
+        _i21.VideoCallRepositoryImpl(gh<_i405.VideoCallRemoteDataSource>()));
+    gh.lazySingleton<_i980.EndCallUseCase>(
+        () => _i980.EndCallUseCase(gh<_i634.VideoCallRepository>()));
+    gh.lazySingleton<_i907.StartVideoCallUseCase>(
+        () => _i907.StartVideoCallUseCase(gh<_i634.VideoCallRepository>()));
+    gh.lazySingleton<_i644.ToggleVideCallUseCase>(
+        () => _i644.ToggleVideCallUseCase(gh<_i634.VideoCallRepository>()));
+    gh.lazySingleton<_i662.ToggleMicUseCase>(
+        () => _i662.ToggleMicUseCase(gh<_i634.VideoCallRepository>()));
+    gh.lazySingleton<_i272.ToggleVideoUseCase>(
+        () => _i272.ToggleVideoUseCase(gh<_i634.VideoCallRepository>()));
     gh.factory<_i309.VideoCallBloc>(() => _i309.VideoCallBloc(
-          joinCall: gh<_i482.JoinVideoCallUseCase>(),
-          leaveCall: gh<_i688.LeaveVideoCallUseCase>(),
-          muteMic: gh<_i602.MuteMicUseCase>(),
-          switchCamera: gh<_i692.SwitchCameraUseCase>(),
-          enableVideo: gh<_i849.EnableVideoUseCase>(),
+          startVideoCallUseCase: gh<_i907.StartVideoCallUseCase>(),
+          endCallUseCase: gh<_i980.EndCallUseCase>(),
+          toggleMicUseCase: gh<_i662.ToggleMicUseCase>(),
+          toggleCameraUseCase: gh<_i644.ToggleVideCallUseCase>(),
+          toggleVideoUseCase: gh<_i272.ToggleVideoUseCase>(),
         ));
     return this;
   }

@@ -1,93 +1,79 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:injectable/injectable.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:video_calling_app/constant/constant.dart';
 
-abstract class VideoCallDataSource {
-  Future<void> initialize();
-  Future<void> join();
-  Future<void> leave();
-  Future<void> muteMic(bool mute);
-  Future<void> enableVideo(bool enable);
+abstract class VideoCallRemoteDataSource{
+  Future<void> initAgora();
+  Future<void> joinChannel();
+  Future<void> leaveChannel();
+  Future<void> toggleMic(bool isMicOn);
+  Future<void> toggleVideo(bool isVideoOn);
   Future<void> switchCamera();
+  RtcEngine get engine;
 }
 
-@LazySingleton(as: VideoCallDataSource)
-class VideoCallRemoteDataSourceImpl implements VideoCallDataSource {
-  static const String appId = "87d0d177403944578e53b56b14ae2adf";
-  static const String token =
-      "007eJxTYJi8/Pa6tjUS24KOZVV4/ma68PCrlXbjqyus28J32lxJ8XdQYLAwTzFIMTQ3NzEwtjQxMTW3SDU1TjI1SzI0SUw1SkxJ+136Ob0hkJHhK/s0FkYGCATxeRjSMouKS5IzEvPyUnMYGAD6ASTX";
-  static const String channelName = 'firstchannel';
-
-  RtcEngine? _engine;
-
-  bool get _isInitialized => _engine != null;
+@LazySingleton(as: VideoCallRemoteDataSource)
+class VideoCallRemoteDataSourceImpl implements VideoCallRemoteDataSource{
+  late final RtcEngine _engine;
 
   @override
-  Future<void> initialize() async {
-    _engine = createAgoraRtcEngine();
-    await _engine!.initialize(RtcEngineContext(appId: appId));
+  RtcEngine get engine => _engine;
 
-    _engine!.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          print('✅ Local user joined: ${connection.localUid}');
-        },
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          print('👤 Remote user joined: $remoteUid');
-        },
-        onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {
-          print('❌ Remote user left: $remoteUid');
-        },
+  @override
+  Future<void> initAgora() async {
+    await [Permission.microphone, Permission.camera].request();
+    _engine = createAgoraRtcEngine();
+    await _engine.initialize(
+      const RtcEngineContext(
+        appId: appId,
+        channelProfile: ChannelProfileType.channelProfileCommunication,
       ),
     );
-
-    await _engine!.enableVideo();
-    await _engine!.startPreview();
-  }
-
-  void _checkInitialization() {
-    if (!_isInitialized) {
-      throw Exception("Agora engine is not initialized. Call initialize() first.");
-    }
+    await _engine.enableVideo();
+    await _engine.startPreview();
   }
 
   @override
-  Future<void> join() async {
-    _checkInitialization();
-    await _engine!.joinChannel(
+  Future<void> joinChannel() async {
+    await _engine.joinChannel(
       token: token,
-      channelId: channelName,
+      channelId: channel,
       uid: 0,
-      options: const ChannelMediaOptions(),
+      options: const ChannelMediaOptions(
+        autoSubscribeVideo: true,
+        autoSubscribeAudio: true,
+        publishCameraTrack: true,
+        publishMicrophoneTrack: true,
+        clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      ),
     );
   }
 
   @override
-  Future<void> leave() async {
-    _checkInitialization();
-    await _engine!.leaveChannel();
+  Future<void> leaveChannel() async {
+    await _engine.leaveChannel();
+    await _engine.release();
   }
 
   @override
-  Future<void> muteMic(bool mute) async {
-    _checkInitialization();
-    await _engine!.muteLocalAudioStream(mute);
+  Future<void> toggleMic(bool isMicOn) async {
+    await _engine.muteLocalAudioStream(!isMicOn);
   }
 
   @override
-  Future<void> enableVideo(bool enable) async {
-    _checkInitialization();
-    if (enable) {
-      await _engine!.enableVideo();
-      await _engine!.startPreview();
+  Future<void> toggleVideo(bool isVideoOn) async {
+    await _engine.muteLocalVideoStream(!isVideoOn);
+    if (isVideoOn) {
+      await _engine.startPreview();
     } else {
-      await _engine!.disableVideo();
+      await _engine.stopPreview();
     }
   }
 
   @override
   Future<void> switchCamera() async {
-    _checkInitialization();
-    await _engine!.switchCamera();
+    await _engine.switchCamera();
   }
+
 }

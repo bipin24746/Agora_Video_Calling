@@ -1,28 +1,40 @@
-import 'package:equatable/equatable.dart';
+part of 'video_call_bloc.dart';
+
+
 
 abstract class VideoCallEvent extends Equatable {
+  const VideoCallEvent();
+
   @override
   List<Object?> get props => [];
 }
 
-class JoinCallEvent extends VideoCallEvent {}
 
-class LeaveCallEvent extends VideoCallEvent {}
 
-class MuteMicEvent extends VideoCallEvent {
-  final bool mute;
-  MuteMicEvent(this.mute);
+class InitializeCallEvent extends VideoCallEvent {}
 
-  @override
-  List<Object?> get props => [mute];
-}
+class ToggleMicEvent extends VideoCallEvent {}
+
+class ToggleVideoEvent extends VideoCallEvent {}
 
 class SwitchCameraEvent extends VideoCallEvent {}
 
-class EnableVideoEvent extends VideoCallEvent {
-  final bool enable;
-  EnableVideoEvent(this.enable);
+class EndCallEvent extends VideoCallEvent {}
+
+class RemoteUserJoinedEvent extends VideoCallEvent {
+  final int uid;
+
+  const RemoteUserJoinedEvent(this.uid);
 
   @override
-  List<Object?> get props => [enable];
+  List<Object?> get props => [uid];
+}
+
+class RemoteUserLeftEvent extends VideoCallEvent {
+  final int uid;
+
+  const RemoteUserLeftEvent(this.uid);
+
+  @override
+  List<Object?> get props => [uid];
 }
