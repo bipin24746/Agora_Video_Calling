@@ -1,40 +1,18 @@
-part of 'video_call_bloc.dart';
+// video_call_event.dart
+abstract class VideoCallEvent {}
 
+class StartVideoCall extends VideoCallEvent {}
 
+class JoinChannel extends VideoCallEvent {}
 
-abstract class VideoCallEvent extends Equatable {
-  const VideoCallEvent();
+class LeaveChannel extends VideoCallEvent {}
 
-  @override
-  List<Object?> get props => [];
+class RemoteUserJoined extends VideoCallEvent {
+  final int remoteUid;
+  RemoteUserJoined(this.remoteUid);
 }
 
-
-
-class InitializeCallEvent extends VideoCallEvent {}
-
-class ToggleMicEvent extends VideoCallEvent {}
-
-class ToggleVideoEvent extends VideoCallEvent {}
-
-class SwitchCameraEvent extends VideoCallEvent {}
-
-class EndCallEvent extends VideoCallEvent {}
-
-class RemoteUserJoinedEvent extends VideoCallEvent {
-  final int uid;
-
-  const RemoteUserJoinedEvent(this.uid);
-
-  @override
-  List<Object?> get props => [uid];
-}
-
-class RemoteUserLeftEvent extends VideoCallEvent {
-  final int uid;
-
-  const RemoteUserLeftEvent(this.uid);
-
-  @override
-  List<Object?> get props => [uid];
+class RemoteUserLeft extends VideoCallEvent {
+  final int remoteUid;
+  RemoteUserLeft(this.remoteUid);
 }

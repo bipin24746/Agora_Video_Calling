@@ -9,6 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:agora_rtc_engine/agora_rtc_engine.dart' as _i703;
 import 'package:dio/dio.dart' as _i361;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
@@ -29,8 +30,7 @@ import 'package:video_calling_app/features/video_call_screen/domain/use_cases/to
     as _i662;
 import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_video_usecase.dart'
     as _i272;
-import 'package:video_calling_app/features/video_call_screen/presentation/bloc/video_call_bloc.dart'
-    as _i309;
+import 'package:video_calling_app/features/video_call_screen/presentation/bloc/video_call_bloc.dart';
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -44,7 +44,9 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final registerModule = _$RegisterModule();
+    gh.factory<VideoCallBloc>(() => VideoCallBloc());
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
+    gh.lazySingleton<_i703.RtcEngine>(() => registerModule.rtcEngine);
     gh.lazySingleton<_i405.VideoCallRemoteDataSource>(
         () => _i405.VideoCallRemoteDataSourceImpl());
     gh.lazySingleton<_i634.VideoCallRepository>(() =>
@@ -59,13 +61,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i662.ToggleMicUseCase(gh<_i634.VideoCallRepository>()));
     gh.lazySingleton<_i272.ToggleVideoUseCase>(
         () => _i272.ToggleVideoUseCase(gh<_i634.VideoCallRepository>()));
-    gh.factory<_i309.VideoCallBloc>(() => _i309.VideoCallBloc(
-          startVideoCallUseCase: gh<_i907.StartVideoCallUseCase>(),
-          endCallUseCase: gh<_i980.EndCallUseCase>(),
-          toggleMicUseCase: gh<_i662.ToggleMicUseCase>(),
-          toggleCameraUseCase: gh<_i644.ToggleVideCallUseCase>(),
-          toggleVideoUseCase: gh<_i272.ToggleVideoUseCase>(),
-        ));
     return this;
   }
 }

@@ -1,126 +1,115 @@
-
-
+// video_call_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:injectable/injectable.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/entities/video_call_user_entity.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/end_call_usecase.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/start_video_call_usecase.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_camera_usecase.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_mic_usecase.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_video_usecase.dart';
-import 'package:video_calling_app/features/video_call_screen/domain/entities/video_call_user_entity.dart';
-
-part 'video_call_event.dart';
-part 'video_call_state.dart';
-
+import 'video_call_event.dart';
+import 'video_call_state.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:video_calling_app/constant/constant.dart';
 
 @injectable
 class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
-  final StartVideoCallUseCase startVideoCallUseCase;
-  final EndCallUseCase endCallUseCase;
-  final ToggleMicUseCase toggleMicUseCase;
-  final ToggleVideCallUseCase toggleCameraUseCase;
-  final ToggleVideoUseCase toggleVideoUseCase;
+  late RtcEngine _engine; // Agora engine
+  bool _localUserJoined = true;
+  int? _remoteUid;
 
-  VideoCallBloc({
-    required this.startVideoCallUseCase,
-    required this.endCallUseCase,
-    required this.toggleMicUseCase,
-    required this.toggleCameraUseCase,
-    required this.toggleVideoUseCase,
-  }) : super(const VideoCallState()) {
-    on<InitializeCallEvent>(_onInitializeCall);
-    on<EndCallEvent>(_onEndCall);
-    on<ToggleMicEvent>(_onToggleMic);
-    on<ToggleVideoEvent>(_onToggleVideo);
-    on<SwitchCameraEvent>(_onSwitchCamera);
-    on<RemoteUserJoinedEvent>(_onRemoteUserJoined);
-    on<RemoteUserLeftEvent>(_onRemoteUserLeft);
+  // Public getter to access the engine
+  RtcEngine get engine => _engine;
+
+  VideoCallBloc() : super(VideoCallInitial()) {
+    // Register event handlers
+    on<StartVideoCall>((event, emit) async {
+      await _startVideoCall(emit);
+    });
+    on<JoinChannel>((event, emit) async {
+      await _joinChannel(emit);
+    });
+    on<RemoteUserJoined>((event, emit) {
+      _remoteUid = event.remoteUid;
+      _emitInProgressState(emit);
+    });
+    on<RemoteUserLeft>((event, emit) {
+      _remoteUid = null;
+      _emitInProgressState(emit);
+    });
+    on<LeaveChannel>((event, emit) async {
+      await _cleanupAgoraEngine(emit);
+      emit(VideoCallInitial());
+    });
   }
 
-  Future<void> _onInitializeCall(
-      InitializeCallEvent event, Emitter<VideoCallState> emit) async {
-    await startVideoCallUseCase.call();
-    emit(VideoCallState(
-      isMicOn: true,
-      isVideoOn: false,
-      isCameraFront: true,
-      localUserJoined: true,
+  Future<void> _startVideoCall(Emitter<VideoCallState> emit) async {
+    try {
+      await _requestPermissions();
+      await _initializeAgoraEngine();
+      await _setupLocalVideo();
+      _emitInProgressState(emit);
+    } catch (e) {
+      emit(VideoCallError(message: "Error starting video call: $e"));
+    }
+  }
+
+  Future<void> _joinChannel(Emitter<VideoCallState> emit) async {
+    try {
+      await _engine.joinChannel(
+        token: token,
+        channelId: channel,
+        options: const ChannelMediaOptions(
+          autoSubscribeVideo: true,
+          autoSubscribeAudio: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+        uid: 0,
+      );
+      _emitInProgressState(emit);
+    } catch (e) {
+      emit(VideoCallError(message: "Error joining channel: $e"));
+    }
+  }
+
+  Future<void> _initializeAgoraEngine() async {
+    _engine = createAgoraRtcEngine();
+    await _engine.initialize(RtcEngineContext(appId: appId, channelProfile: ChannelProfileType.channelProfileCommunication));
+    _setupEventHandlers();
+  }
+
+  Future<void> _setupLocalVideo() async {
+    await _engine.enableVideo();
+    await _engine.startPreview();
+  }
+
+  void _setupEventHandlers() {
+    _engine.registerEventHandler(RtcEngineEventHandler(
+      onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+        _localUserJoined = true;
+        add(RemoteUserJoined(0));  // Replace with your UID if needed
+      },
+      onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+        add(RemoteUserJoined(remoteUid));
+      },
+      onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+        add(RemoteUserLeft(remoteUid));
+      },
     ));
   }
 
-  Future<void> _onEndCall(
-      EndCallEvent event, Emitter<VideoCallState> emit) async {
-    await endCallUseCase.call();
-    emit(const VideoCallState());
+  Future<void> _requestPermissions() async {
+    await [Permission.microphone, Permission.camera].request();
   }
 
-  Future<void> _onToggleMic(
-      ToggleMicEvent event, Emitter<VideoCallState> emit) async {
-    // Toggle mic status
-    final newMicStatus = !state.isMicOn;
-
-    // Call the use case to toggle the mic
-    await toggleMicUseCase.call(newMicStatus);
-
-    // Emit the updated state
-    emit(VideoCallState(
-      isMicOn: newMicStatus,  // Updated mic status
-      isVideoOn: state.isVideoOn,
-      isCameraFront: state.isCameraFront,
-      localUserJoined: state.localUserJoined,
-      remoteUser: state.remoteUser,
-    ));
+  Future<void> _cleanupAgoraEngine(Emitter<VideoCallState> emit) async {
+    try {
+      await _engine.leaveChannel();
+      await _engine.release();
+    } catch (e) {
+      emit(VideoCallError(message: "Error cleaning up Agora engine: $e"));
+    }
   }
 
-
-  Future<void> _onToggleVideo(
-      ToggleVideoEvent event, Emitter<VideoCallState> emit) async {
-    final newVideoStatus = !state.isVideoOn;
-    await toggleVideoUseCase.call(newVideoStatus);
-    emit(VideoCallState(
-      isMicOn: state.isMicOn,
-      isVideoOn: newVideoStatus,
-      isCameraFront: state.isCameraFront,
-      localUserJoined: state.localUserJoined,
-      remoteUser: state.remoteUser,
-    ));
-  }
-
-  Future<void> _onSwitchCamera(
-      SwitchCameraEvent event, Emitter<VideoCallState> emit) async {
-    final newCameraDirection = !state.isCameraFront;
-    await toggleCameraUseCase.call();
-    emit(VideoCallState(
-      isMicOn: state.isMicOn,
-      isVideoOn: state.isVideoOn,
-      isCameraFront: newCameraDirection,
-      localUserJoined: state.localUserJoined,
-      remoteUser: state.remoteUser,
-    ));
-  }
-
-  void _onRemoteUserJoined(
-      RemoteUserJoinedEvent event, Emitter<VideoCallState> emit) {
-    final remoteUser = VideoCallUserEntity(uid: event.uid);
-    emit(VideoCallState(
-      isMicOn: state.isMicOn,
-      isVideoOn: state.isVideoOn,
-      isCameraFront: state.isCameraFront,
-      localUserJoined: state.localUserJoined,
-      remoteUser: remoteUser,
-    ));
-  }
-
-  void _onRemoteUserLeft(
-      RemoteUserLeftEvent event, Emitter<VideoCallState> emit) {
-    emit(VideoCallState(
-      isMicOn: state.isMicOn,
-      isVideoOn: state.isVideoOn,
-      isCameraFront: state.isCameraFront,
-      localUserJoined: state.localUserJoined,
-      remoteUser: null,
-    ));
+  // Helper function to emit in-progress state
+  void _emitInProgressState(Emitter<VideoCallState> emit) {
+    emit(VideoCallLoading(localUserJoined: _localUserJoined, remoteUid: _remoteUid));
   }
 }

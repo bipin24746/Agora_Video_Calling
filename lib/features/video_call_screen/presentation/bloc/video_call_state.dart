@@ -1,26 +1,17 @@
-part of 'video_call_bloc.dart';
+// video_call_state.dart
+abstract class VideoCallState {}
 
-class VideoCallState extends Equatable {
-  final bool isMicOn;
-  final bool isVideoOn;
-  final bool isCameraFront;
+class VideoCallInitial extends VideoCallState {}
+
+class VideoCallLoading extends VideoCallState {
   final bool localUserJoined;
-  final VideoCallUserEntity? remoteUser;
+  final int? remoteUid;
+  VideoCallLoading({required this.localUserJoined, this.remoteUid});
+}
 
-  const VideoCallState({
-    this.isMicOn = true,
-    this.isVideoOn = false,
-    this.isCameraFront = true,
-    this.localUserJoined = false,
-    this.remoteUser,
-  });
+class VideoCallLoaded extends VideoCallState{}
 
-  @override
-  List<Object?> get props => [
-    isMicOn,
-    isVideoOn,
-    isCameraFront,
-    localUserJoined,
-    remoteUser,
-  ];
+class VideoCallError extends VideoCallState {
+  final String message;
+  VideoCallError({required this.message});
 }
