@@ -19,7 +19,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   bool _localUserJoined = false;
   late RtcEngine _engine;
   bool _isMicOn = true;
-  bool _isOnSpeaker = false;
+  bool _isOnSpeaker = false; // Default is loudspeaker off
 
   @override
   void initState() {
@@ -112,22 +112,23 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     });
   }
 
-  // Toggle speakerphone state
+  // Toggle speakerphone state (normal speaker vs loudspeaker)
   Future<void> _toggleSpeaker() async {
     if (_isOnSpeaker) {
-      // Set speaker to normal (earpiece mode)
-      await _engine.setEnableSpeakerphone(false);
+      // Set to normal speaker (earpiece mode)
+      await _engine.setEnableSpeakerphone(false); // Set the audio output to earpiece
       setState(() {
-        _isOnSpeaker = false; // Update state to indicate speaker is now off
+        _isOnSpeaker = false; // Update state to indicate speaker is now off (earpiece)
       });
     } else {
-      // Set speaker to loud (speakerphone mode)
-      await _engine.setEnableSpeakerphone(true);
+      // Set to loudspeaker (speakerphone mode)
+      await _engine.setEnableSpeakerphone(true); // Set the audio output to loudspeaker
       setState(() {
-        _isOnSpeaker = true; // Update state to indicate speaker is now on
+        _isOnSpeaker = true; // Update state to indicate speaker is now on (loudspeaker)
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -164,15 +165,11 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                   ),
                 ),
                 GestureDetector(
-
                   onTap: _toggleSpeaker, // Toggle speaker state
                   child: Icon(
-
-
                     _isOnSpeaker ? Icons.speaker : Icons.speaker_group,
                     color: _isOnSpeaker ? Colors.black : Colors.grey,
                   ),
-
                 ),
                 GestureDetector(
                   onTap: _endCall, // End the call
