@@ -13,11 +13,10 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   bool _localUserJoined = true;
   int? _remoteUid;
 
-  // Public getter to access the engine
+
   RtcEngine get engine => _engine;
 
   VideoCallBloc() : super(VideoCallInitial()) {
-    // Register event handlers
     on<StartVideoCall>((event, emit) async {
       await _startVideoCall(emit);
     });
@@ -84,7 +83,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     _engine.registerEventHandler(RtcEngineEventHandler(
       onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
         _localUserJoined = true;
-        add(RemoteUserJoined(0));  // Replace with your UID if needed
+        add(RemoteUserJoined(0));
       },
       onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
         add(RemoteUserJoined(remoteUid));

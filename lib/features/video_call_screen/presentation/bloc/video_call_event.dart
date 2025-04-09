@@ -1,4 +1,3 @@
-// video_call_event.dart
 abstract class VideoCallEvent {}
 
 class StartVideoCall extends VideoCallEvent {}

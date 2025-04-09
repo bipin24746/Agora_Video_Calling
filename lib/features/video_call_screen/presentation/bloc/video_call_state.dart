@@ -1,4 +1,3 @@
-// video_call_state.dart
 abstract class VideoCallState {}
 
 class VideoCallInitial extends VideoCallState {}
