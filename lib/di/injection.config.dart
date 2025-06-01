@@ -30,7 +30,8 @@ import 'package:video_calling_app/features/video_call_screen/domain/use_cases/to
     as _i662;
 import 'package:video_calling_app/features/video_call_screen/domain/use_cases/toggle_video_usecase.dart'
     as _i272;
-import 'package:video_calling_app/features/video_call_screen/presentation/bloc/video_call_bloc.dart';
+import 'package:video_calling_app/features/video_call_screen/presentation/bloc/video_call_bloc.dart'
+    as _i309;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -44,7 +45,7 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final registerModule = _$RegisterModule();
-    gh.factory<VideoCallBloc>(() => VideoCallBloc());
+    gh.factory<_i309.VideoCallBloc>(() => _i309.VideoCallBloc());
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i703.RtcEngine>(() => registerModule.rtcEngine);
     gh.lazySingleton<_i405.VideoCallRemoteDataSource>(

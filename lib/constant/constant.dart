@@ -1,3 +1,3 @@
 const appId = "87d0d177403944578e53b56b14ae2adf";
-const token = "007eJxTYCiVe7Tujvi9lR4rgnokj/QLMluf8tsVZPzfo9jtI1NJr7MCg4V5ikGKobm5iYGxpYmJqblFqqlxkqlZkqFJYqpRYkranvtf0xsCGRlWba1mYWSAQBCfh6EsMyU1PzkxJyczL52BAQAsQCLV";
+const token = "007eJxTYOAMu7UlrW6nmPFbtcMJ81a/WhNz2fTcjA9R+neiX8iceLZbgcHCPMUgxdDc3MTA2NLExNTcItXUOMnULMnQJDHVKDElzeyEdUZDICPDidBPLIwMEAji8zCUZaak5icn5uRk5qUzMAAA91wkzw==";
 const channel = "videocalling";
